@@ -15,8 +15,10 @@ namespace MatrixZeroOne
     {
         Graphics g;
         Bitmap b;
+        List<int> data = new List<int>();
         int m, n;
         int[,] a;
+        int steps = 0;
         public void LoadFile(string fs)
         {
             TextReader load = new StreamReader(fs);
@@ -64,7 +66,16 @@ namespace MatrixZeroOne
             g = Graphics.FromImage(b);
             timer1.Start();
         }
-
+        public int Count()
+        {
+            int nr = 0;
+            for (int i = 0;i<n;i++)
+                for (int j = 0; j <m; j++)
+                {
+                    if (a[i, j] == 1) nr++;
+                }
+            return nr;
+        }
         private void Form1_Load(object sender, EventArgs e)
         {
             Initialise();
@@ -88,9 +99,25 @@ namespace MatrixZeroOne
 
         private void timer1_Tick(object sender, EventArgs e)
         {
+            data.Add(Count());
             TickChange();
+            steps++;
             Draw();
             pictureBox1.Image = b;
+            if (steps == 100)
+            { 
+                timer1.Enabled = false;
+                Save(@"Dataou.txt");
+            }
+        }
+
+        private void Save(string fn)
+        {
+            TextWriter f = new StreamWriter(fn);
+            foreach(int i in data)
+            {
+                f.WriteLine(i);
+            }
         }
 
         public void TickChange()
@@ -107,11 +134,40 @@ namespace MatrixZeroOne
                 for (int j = 0; j < m; j++)
                 {
                     //M = Conditia1(i,j,M);
-                    M = Conditia2(i, j, M);
+                    //M = Conditia2(i, j, M);
+                    M = Conditia3(i, j, M);
+
                 }
             }
             a = M;
 
+        }
+        public int[,] Conditia3(int i, int j, int[,] M)
+        {
+            int s = 0;
+            //PRIMA LINIE
+            if (i - 1 >= 0 && j - 1 >= 0) if (a[i - 1, j - 1] == 1) s++;
+            if (i - 1 >= 0 && j >= 0) if (a[i - 1, j] == 1) s++;
+            if (i - 1 >= 0 && j + 1 < m) if (a[i - 1, j + 1] == 1) s++;
+            //LINIA MIJLOC
+            if (i >= 0 && j - 1 >= 0) if (a[i, j - 1] == 1) s++;
+            if (i >= 0 && j + 1 < m) if (a[i, j + 1] == 1) s++;
+            //ULTIMA LINIE
+            if (i + 1 < n && j - 1 >= 0) if (a[i + 1, j - 1] == 1) s++;
+            if (i + 1 < n && j >= 0) if (a[i + 1, j] == 1) s++;
+            if (i + 1 < n && j + 1 < m) if (a[i + 1, j + 1] == 1) s++;
+            if (a[i, j] == 1)
+            {
+                if (s < 2)
+                    M[i, j] = 0;
+                if (s == 2 || s == 3)
+                    M[i, j] = 1;
+                if (s > 3)
+                    M[i, j] = 0;
+            }
+            else
+                if (s == 3) M[i, j] = 1;
+            return M;
         }
         public int[,] Conditia2(int i, int j, int[,] M)
         {
@@ -128,7 +184,7 @@ namespace MatrixZeroOne
             if (i + 1 < n && j >= 0) if (a[i + 1, j] == 1) s++;
             if (i + 1 < n && j + 1 < m) if (a[i + 1, j + 1] == 1) s++;
 
-            if (s % 2 != 0)
+            if (s != 0)
                 M[i, j] = 1;
             else
                 M[i, j] = 0;
